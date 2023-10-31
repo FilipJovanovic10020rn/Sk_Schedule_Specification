@@ -23,6 +23,7 @@ public interface ClassSchedule {
      * @param toHours // radni sati do kojih traje nastava
      */
     // TODO: promeniti da ovo vraca objekat klase a ne da je void
+    //TODO: Dodati novu klasu Termin koja ima Vreme, Datum, Ucionicu i ona je kljuc za mapu
     //  objekat Schedule treba da bude mapa u mapi Map<Datum, Map<Vreme (mozda ovde da se doda i ucionica?) , Cas (podaci o predavanju)>>
     void initializeSchedule(String name, Date startDate, Date toDate, int fromHours, int toHours);
 
