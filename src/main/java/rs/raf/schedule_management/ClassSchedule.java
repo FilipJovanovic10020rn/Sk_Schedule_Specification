@@ -2,9 +2,12 @@ package rs.raf.schedule_management;
 
 import rs.raf.classes.ClassLecture;
 import rs.raf.classes.Classroom;
+import rs.raf.classes.Term;
 import rs.raf.enums.AddOns;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface ClassSchedule {
@@ -23,6 +26,7 @@ public interface ClassSchedule {
     //  objekat Schedule treba da bude mapa u mapi Map<Datum, Map<Vreme (mozda ovde da se doda i ucionica?) , Cas (podaci o predavanju)>>
     void initializeSchedule(String name, Date startDate, Date toDate, int fromHours, int toHours);
 
+//    Map<Term,ClassLecture> initializeSchedule(String name, Date startDate, Date toDate, int fromHours, int toHours);
 
     // TODO: odabrati jednu od dve ja sam vise za 2. ali dogovor
 
@@ -95,6 +99,11 @@ public interface ClassSchedule {
     // TODO mozda staviti da budu opcione stvari za novo ako je null ne menja se
     void RescheduleClass(Date oldDate, int oldStartTime, String oldClassroomName, String lectureName,
                          Date newDate, int newStartTime, String newClassroomName);
+
+
+    List<Term> findFreeTerms();
+    List<ClassLecture> findClassLectures();
+    
 
 
     // TODO ovo prekopirati sa predavanja
