@@ -2,6 +2,7 @@ package rs.raf.schedule_management;
 
 import rs.raf.classes.ClassLecture;
 import rs.raf.classes.Classroom;
+import rs.raf.classes.Schedule;
 import rs.raf.classes.Term;
 import rs.raf.enums.AddOns;
 
@@ -17,19 +18,14 @@ public interface ClassSchedule {
     /**
      * Inicijalizuje novi raspored
      * @param name // naziv novog rasporeda
+     * @param classrooms // lista ucionica skole
      * @param startDate // datum od pocetka rasporeda
      * @param toDate // datum od kraja rasporeda
      * @param fromHours // radni sati od kojih pocinje nastava
      * @param toHours // radni sati do kojih traje nastava
      */
-    // TODO: promeniti da ovo vraca objekat klase a ne da je void
-    //TODO: Dodati novu klasu Termin koja ima Vreme, Datum, Ucionicu i ona je kljuc za mapu
-    //  objekat Schedule treba da bude mapa u mapi Map<Datum, Map<Vreme (mozda ovde da se doda i ucionica?) , Cas (podaci o predavanju)>>
-    void initializeSchedule(String name, Date startDate, Date toDate, int fromHours, int toHours);
-
-//    Map<Term,ClassLecture> initializeSchedule(String name, Date startDate, Date toDate, int fromHours, int toHours);
-
-    // TODO: odabrati jednu od dve ja sam vise za 2. ali dogovor
+    // TODO: noClassroomException, datesException, hoursException;
+    Schedule initializeSchedule(String name,List<Classroom> classrooms, Date startDate, Date toDate, int fromHours, int toHours);
 
     /**
      * Kreira novu ucionicu
@@ -49,35 +45,26 @@ public interface ClassSchedule {
      * @param addOns // dodaci koje ucionica ima ( projector, computers, pen )
      */
     Classroom CreateClassroom(String name, int capacity, AddOns ... addOns);
+    // TODO na test-u cuvati ovo u listi
+    //  capacityException, mozda previseAdons ili duplirani, sameNameExc
 
-    //TODO: mozda dodati edit classroom ili remove
 
-
-
-    // TODO: mozda dodati grupe koje slusaju i tip predavanja ( vezbe ili pred )
-    // TODO: mozda ubaciti i sceddule mapu ako radimo da bude void
-    //  ako ne onda pri kreiranju moramo pozvati ili novu metodu add classToSchedule koja ce da primi taj i da provali gde i kako da ga doda
-    //  ili da kazemo da se to radi u test aplikaciji sto mislim da nije dobro
-    //
     /**
      * Kreira novi cas
+     * @param schedule // raspored nad kojim se radi
      * @param startTime // pocetak predavanja
-     * @param endTime // kraj predavanja  ( ovde mozemo da stavimo mozda i trajanje? )
+     * @param duration // trajanje predavanja
      * @param classroomName // naziv ucionice u kojoj je predavanje
-     * @param lectureName // naziv predavanja ( opciono )
-     * @param professor // ime profesora ( opciono )
+     * @param lectureName // naziv predavanja
+     * @param professor // ime profesora
      * @param fromDate // datum predavanja ili pocetni datum predavanja za predavanja koja se ponavaljaju
      * @param toDate // datum do kada traju predavanja koja se ponavaljaju ili null
      */
-    ClassLecture createClass(String startTime, String endTime, String classroomName,
-                          Optional<String> lectureName, Optional<String> professor, Date fromDate, Date toDate);
-
-    // TODO iznad optional jer je tako nesto spomenula ali moze sta god
-    ClassLecture createClass(String startTime, String endTime, String classroomName,
+    void createClass(Schedule schedule,int startTime, int duration, String classroomName,
                              String lectureName, String professor, Date fromDate, Date toDate);
+    // TODO zauzetTerminExc, nePostojiTermin
 
-
-
+    // TODO DODATI FROM I TO DATE
     /**
      * Brise cas iz rasporeda
      * @param date // datum predavanja
@@ -85,10 +72,13 @@ public interface ClassSchedule {
      * @param classroomName // naziv ucionice u kojoj je predavanje
      * @param lectureName // naziv predavanja ( opciono )
      */
-    void RemoveClass(Date date, int startTime, String classroomName, String lectureName); // TODO mozda lecture name da bude sigurnije
+    void RemoveClass(Schedule schedule,Date date, int startTime, String classroomName, String lectureName);
+    // TODO nePostojiCas
 
+    // TODO DODATI FROM I TO DATE
     /**
-     * Brise cas iz rasporeda
+     * premesta cas iz rasporeda
+     * @param schedule // raspored nad kojim radimo
      * @param oldDate // datum predavanja koji hocemo da promenimo
      * @param oldStartTime // pocetak predavanja koji hocemo da promenimo
      * @param oldClassroomName // naziv ucionice predavanja koji hocemo da promenimo
@@ -97,14 +87,112 @@ public interface ClassSchedule {
      * @param newStartTime // novi pocetak predavanja ili null ako ne zelimo da promenimo pocetak
      * @param newClassroomName // nova ucionica za predavanje ili null ako ne zelimo da promenimo ucionicu
      */
-    // TODO mozda staviti da budu opcione stvari za novo ako je null ne menja se
-    void RescheduleClass(Date oldDate, int oldStartTime, String oldClassroomName, String lectureName,
+    void RescheduleClass(Schedule schedule, Date oldDate, int oldStartTime, String oldClassroomName, String lectureName,
                          Date newDate, int newStartTime, String newClassroomName);
+    // TODO zauzetTerminExc, nePostojiCas, nePostojiTermin
 
 
-    List<Term> findFreeTerms();
-    List<ClassLecture> findClassLectures();
-    
+
+    /**
+     * Pretraga za ucionicu po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param capacity // broj mesta u ucionici ( ako nije bitan parametar proslediti -1 ili 0 )
+     * @param addOns // dodaci koje ucionica ima ( projector, computers, pen )
+     */
+    List<Classroom> findClassrooms(Schedule schedule, int capacity, AddOns ... addOns);
+    // TODO noSuchClasroom, addOnsExc, capacityExc
+    /**
+     * Pretraga za ucionicu po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param addOns // dodaci koje ucionica ima ( projector, computers, pen )
+     */
+    List<Classroom> findClassrooms(Schedule schedule, AddOns ... addOns);
+    // TODO noSuchClasroom, addOnsExc
+    /**
+     * Pretraga za ucionicu po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param capacity // broj mesta u ucionici ( ako nije bitan parametar proslediti -1 ili 0 )
+     */
+    List<Classroom> findClassrooms(Schedule schedule, int capacity);
+    // TODO noSuchClasroom, capacityExc
+
+
+    // TODO OVO MOZDA IPAK NE TRBA TRUE ILI FALSE
+    //  izmeniti da ne pise po parametrima nego navesti ih lepo
+    /**
+     * Pretraga termina po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param date // datum trazenog termina
+     * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
+     * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
+     */
+    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree);
+    // TODO loseUnetDuration, dateOutOfBounds
+
+    /**
+     * Pretraga termina po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param date // datum trazenog termina
+     * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
+     * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
+     * @param classroomName // naziv ucionice za trazeni termin
+     */
+    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, String classroomName);
+    // TODO loseUnetDuration, dateOutOfBounds, noSuchClasroom
+
+    /**
+     * Pretraga termina po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param date // datum trazenog termina
+     * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
+     * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
+     * @param capacity // broj mesta u ucionici za termin
+     * @param addOns // dodaci koje ucionica ima ( projector, computers, pen ) za termin
+     */
+    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, int capacity, AddOns ... addOns);
+    // TODO loseUnetDuration, dateOutOfBounds, noSuchClasroom, capacityExc, addOnsExc
+
+    /**
+     * Pretraga termina po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param date // datum trazenog termina
+     * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
+     * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
+     * @param capacity // broj mesta u ucionici za termin
+     */
+    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, int capacity);
+    // TODO loseUnetDuration, dateOutOfBounds, noSuchClasroom, capacityExc
+
+    /**
+     * Pretraga termina po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param date // datum trazenog termina
+     * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
+     * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
+     * @param addOns // dodaci koje ucionica ima ( projector, computers, pen ) za termin
+     */
+    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, AddOns ... addOns);
+    // TODO loseUnetDuration, dateOutOfBounds, noSuchClasroom, addOnsExc
+
+    /**
+     * Pretraga termina po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param professor // ime profesora za vezane termine
+     * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
+     */
+    List<Term> findTerms(Schedule schedule, String professor, boolean isFree);
+    // TODO professorDoesntExist
+
+    /**
+     * Pretraga termina po parametrima
+     * @param schedule // raspored nad kojim radimo
+     * @param className // naziv predmeta za vezane termine
+     */
+    List<Term> findTerms(Schedule schedule, String className);
+    // TODO classNameDesntExist
+
+
+
 
 
     // TODO ovo prekopirati sa predavanja
