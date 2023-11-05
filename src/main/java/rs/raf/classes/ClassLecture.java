@@ -18,4 +18,28 @@ public class ClassLecture {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public String getProfessor() {
+        return professor;
+    }
+
+    public int getStartTime() {
+        return startTime;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
 }
