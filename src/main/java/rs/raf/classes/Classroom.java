@@ -22,4 +22,16 @@ public class Classroom {
         //TODO odraditi ovaj equals da proveri gluposti, mozda izbaciti ime iz equals u Term??
         return super.equals(obj);
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public List<AddOns> getAddOns() {
+        return addOns;
+    }
 }

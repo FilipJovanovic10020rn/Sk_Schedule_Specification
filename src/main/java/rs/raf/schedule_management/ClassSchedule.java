@@ -6,10 +6,7 @@ import rs.raf.classes.Schedule;
 import rs.raf.classes.Term;
 import rs.raf.enums.AddOns;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public interface ClassSchedule {
 
@@ -21,32 +18,90 @@ public interface ClassSchedule {
      * @param classrooms // lista ucionica skole
      * @param startDate // datum od pocetka rasporeda
      * @param toDate // datum od kraja rasporeda
-     * @param fromHours // radni sati od kojih pocinje nastava
+     * @param fromHours // radni sati od kojih pocinje nastava 0 to 24
      * @param toHours // radni sati do kojih traje nastava
+     * @return kreirani raspored
+     * @throws ClassroomListEmptyException ako je lista ucionica prazna
+     * @throws DatesException ako je startDate veci od toDate
+     * @throws HoursException ako je fromHours veci od toHours
      */
     // TODO: noClassroomException, datesException, hoursException;
-    Schedule initializeSchedule(String name,List<Classroom> classrooms, Date startDate, Date toDate, int fromHours, int toHours);
+    default Schedule initializeSchedule(String name,List<Classroom> classrooms, Date startDate, Date toDate, int fromHours, int toHours){
+        if(classrooms.isEmpty()){
+            throw new ClassroomListEmptyException("Lista ucionica je prazna");
+        }
+        if(startDate.after(toDate)){
+            throw new DatesException("Startni datum : " + startDate+ " mora biti pre zavrsnog datuma: " + toDate);
+        }
+        if(fromHours >= toHours){
+            throw new HoursException("Pocetni sati: " + fromHours+ " mora biti pre zavrsnih sati: " + toHours);
+        }
+
+        Map<Term,ClassLecture> initialMap = new HashMap<>();
+
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(startDate);
+
+        // for each date
+        while (!calendar.getTime().after(toDate)) {
+            // if the date is a weekend skip
+            if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY || calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY){
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
+                continue;
+            }
+            // for each hour
+            for(int i = fromHours; i<=toHours; i++){
+                // for each classroom
+                for(Classroom classroom: classrooms){
+                    Term term = new Term(classroom,i,calendar.getTime());
+                    initialMap.put(term,null);
+                }
+            }
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        return new Schedule(name,initialMap,classrooms);
+    }
 
     /**
      * Kreira novu ucionicu
-     * @param name // naziv ucionice
-     * @param capacity // broj mesta u ucionici
-     * @param projector // boolean da li ucionica sadrzi projektor
-     * @param computers // boolean da li ucionica sadrzi racunare
-     * @param whiteboard // boolean da li ucionica sadrzi pisacu tablu
-     * @param pen // boolean da li ucionica sadrzi olovku
-     */
-    Classroom CreateClassroom(String name, int capacity, boolean projector, boolean computers, boolean whiteboard, boolean pen);
-
-    /**
-     * Kreira novu ucionicu
+     * @param classrooms // lista ucionica
      * @param name // naziv ucionice
      * @param capacity // broj mesta u ucionici
      * @param addOns // dodaci koje ucionica ima ( projector, computers, pen )
+     * @return kreiranu ucionicu
+     * @throws SameNameException ako vec postoji ucionica sa istim imenom
+     * @throws LowCapacityException ako je navedeni kapacitet manji od 1
+     * @throws DuplicateAddOnsException ako postoje duplicirani dodaci
      */
-    Classroom CreateClassroom(String name, int capacity, AddOns ... addOns);
-    // TODO na test-u cuvati ovo u listi
-    //  capacityException, mozda previseAdons ili duplirani, sameNameExc
+    default Classroom createClassroom(List<Classroom> classrooms ,String name, int capacity, AddOns ... addOns){
+
+        for(Classroom classroom: classrooms){
+            if(classroom.getName().equals(name)){
+                throw new SameNameException("Ucionica sa imenom: '" + name + "' vec postoji");
+            }
+        }
+
+        if(capacity <1){
+            throw new LowCapacityException("Kapacitet ucionice mora biti barem 1");
+        }
+
+
+        Set<AddOns> uniqueAddOnsSet = new HashSet<>();
+
+        for (AddOns addOn : addOns) {
+            if (!uniqueAddOnsSet.add(addOn)) {
+                // Throw an exception if a duplicate add-on is detected
+                throw new DuplicateAddOnsException("Duplirani dodatak: " + addOn);
+            }
+        }
+
+        List<AddOns> addOnsList = new ArrayList<>(uniqueAddOnsSet);
+
+
+        return new Classroom(name,capacity,addOnsList);
+    }
 
 
     /**

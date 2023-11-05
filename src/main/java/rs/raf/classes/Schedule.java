@@ -29,5 +29,12 @@ public class Schedule {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
     }
+    public Classroom getClassroomByName(String name){
+        for(Classroom c: classrooms){
+            if(c.getName().equals(name))
+                return c;
+        }
+        return null;
+    }
 
 }

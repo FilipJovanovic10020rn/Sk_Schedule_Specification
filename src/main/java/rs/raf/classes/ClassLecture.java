@@ -7,13 +7,15 @@ public class ClassLecture {
     private String professor;
     private int startTime;
     private int duration;
-    private Date date;
+    private Date startDate;
+    private Date endDate;
 
-    public ClassLecture(String className, String professor, int startTime, int duration, Date date) {
+    public ClassLecture(String className, String professor, int startTime, int duration, Date startDate, Date endDate) {
         this.className = className;
         this.professor = professor;
         this.startTime = startTime;
         this.duration = duration;
-        this.date = date;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 }
