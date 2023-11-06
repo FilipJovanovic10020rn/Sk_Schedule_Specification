@@ -34,4 +34,12 @@ public class Classroom {
     public List<AddOns> getAddOns() {
         return addOns;
     }
+    public boolean hasAddOns(List<AddOns> addOns){
+        for(AddOns addOn :addOns){
+            if(!this.addOns.contains(addOn)){
+                return false;
+            }
+        }
+        return true;
+    }
 }

@@ -14,12 +14,26 @@ public class Schedule {
     private String name;
     private Map<Term,ClassLecture> scheduleMap;
     private List<Classroom> classrooms;
+    private Date startDate;
+    private Date endDate;
+    private int startHours;
+    private int endHours;
 
-    public Schedule(String name, Map<Term, ClassLecture> scheduleMap, List<Classroom> classrooms) {
+    public Schedule(String name, Map<Term, ClassLecture> scheduleMap, List<Classroom> classrooms, Date startDate, Date endDate, int startHours, int endHours) {
         this.name = name;
         this.scheduleMap = scheduleMap;
         this.classrooms = classrooms;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.startHours = startHours;
+        this.endHours = endHours;
     }
+
+//    public Schedule(String name, Map<Term, ClassLecture> scheduleMap, List<Classroom> classrooms,) {
+//        this.name = name;
+//        this.scheduleMap = scheduleMap;
+//        this.classrooms = classrooms;
+//    }
     public void createDates(Date startDate, Date toDate) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(startDate);
@@ -30,7 +44,7 @@ public class Schedule {
         }
     }
     public Classroom getClassroomByName(String name){
-        for(Classroom c: classrooms){
+        for(Classroom c: this.classrooms){
             if(c.getName().equals(name))
                 return c;
         }
@@ -41,4 +55,23 @@ public class Schedule {
         return this.scheduleMap;
     }
 
+    public List<Classroom> getClassrooms() {
+        return classrooms;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public int getStartHours() {
+        return startHours;
+    }
+
+    public int getEndHours() {
+        return endHours;
+    }
 }

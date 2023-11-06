@@ -19,7 +19,7 @@ public class Term {
         this.date = date;
     }
 
-    public boolean findTerm(Classroom classroom, int startTime, Date date){
+    public boolean isTermTheSame(Classroom classroom, int startTime, Date date){
         boolean isClassroomNotNull = (classroom != null);
         boolean isStartTimeValid = (startTime >= 0);
         boolean isDateNotNull = (date != null);
@@ -42,5 +42,17 @@ public class Term {
 
 
         return true;
+    }
+
+    public Classroom getClassroom() {
+        return classroom;
+    }
+
+    public int getStartTime() {
+        return startTime;
+    }
+
+    public Date getDate() {
+        return date;
     }
 }
