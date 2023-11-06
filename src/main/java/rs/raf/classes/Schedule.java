@@ -37,4 +37,8 @@ public class Schedule {
         return null;
     }
 
+    public Map<Term,ClassLecture> getScheduleMap(){
+        return this.scheduleMap;
+    }
+
 }
