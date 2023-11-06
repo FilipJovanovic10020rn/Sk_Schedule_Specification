@@ -5,6 +5,7 @@ import rs.raf.classes.Classroom;
 import rs.raf.classes.Schedule;
 import rs.raf.classes.Term;
 import rs.raf.enums.AddOns;
+import rs.raf.exceptions.*;
 
 import java.util.*;
 
@@ -25,8 +26,8 @@ public interface ClassSchedule {
      * @throws DatesException ako je startDate veci od toDate
      * @throws HoursException ako je fromHours veci od toHours
      */
-    // TODO: noClassroomException, datesException, hoursException;
-    default Schedule initializeSchedule(String name,List<Classroom> classrooms, Date startDate, Date toDate, int fromHours, int toHours){
+    default Schedule initializeSchedule(String name,List<Classroom> classrooms, Date startDate, Date toDate, int fromHours, int toHours)
+    throws ClassroomListEmptyException,DatesException,HoursException {
         if(classrooms.isEmpty()){
             throw new ClassroomListEmptyException("Lista ucionica je prazna");
         }
@@ -55,6 +56,7 @@ public interface ClassSchedule {
                 // for each classroom
                 for(Classroom classroom: classrooms){
                     Term term = new Term(classroom,i,calendar.getTime());
+                    // creates empty map values
                     initialMap.put(term,null);
                 }
             }
@@ -75,7 +77,8 @@ public interface ClassSchedule {
      * @throws LowCapacityException ako je navedeni kapacitet manji od 1
      * @throws DuplicateAddOnsException ako postoje duplicirani dodaci
      */
-    default Classroom createClassroom(List<Classroom> classrooms ,String name, int capacity, AddOns ... addOns){
+    default Classroom createClassroom(List<Classroom> classrooms ,String name, int capacity, AddOns ... addOns)
+        throws SameNameException,LowCapacityException,DuplicateAddOnsException {
 
         for(Classroom classroom: classrooms){
             if(classroom.getName().equals(name)){
@@ -92,7 +95,6 @@ public interface ClassSchedule {
 
         for (AddOns addOn : addOns) {
             if (!uniqueAddOnsSet.add(addOn)) {
-                // Throw an exception if a duplicate add-on is detected
                 throw new DuplicateAddOnsException("Duplirani dodatak: " + addOn);
             }
         }
@@ -114,10 +116,12 @@ public interface ClassSchedule {
      * @param professor // ime profesora
      * @param fromDate // datum predavanja ili pocetni datum predavanja za predavanja koja se ponavaljaju
      * @param toDate // datum do kada traju predavanja koja se ponavaljaju ili null
+     * @throws TermDoesntExistException ako prosledjen termin ne postoji
+     * @throws TermTakenException ako je termin vec zauzet
      */
     void createClass(Schedule schedule,int startTime, int duration, String classroomName,
-                             String lectureName, String professor, Date fromDate, Date toDate);
-    // TODO zauzetTerminExc, nePostojiTermin
+                             String lectureName, String professor, Date fromDate, Date toDate)
+            throws TermDoesntExistException, TermTakenException;
 
     // TODO DODATI FROM I TO DATE
     /**
@@ -128,7 +132,7 @@ public interface ClassSchedule {
      * @param lectureName // naziv predavanja ( opciono )
      */
     void RemoveClass(Schedule schedule,Date date, int startTime, String classroomName, String lectureName);
-    // TODO nePostojiCas
+    // TODO nePostojiCas, classroom d
 
     // TODO DODATI FROM I TO DATE
     /**
