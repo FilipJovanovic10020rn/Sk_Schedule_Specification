@@ -2,7 +2,10 @@ package rs.raf.classes;
 
 import rs.raf.exceptions.*;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public class Implementation1 {
 
@@ -11,94 +14,182 @@ public class Implementation1 {
 //    }
 //    private Map<Term,ClassLecture> scheduleMap;
     // todo dodati i exception svuda ClassroomDoesntExistException
-    void createClass(Schedule schedule, int startTime, int duration, String classroomName,
-                     String lectureName, String professor, Date fromDate, Date toDate) {
-        Term termin = new Term(schedule.getClassroomByName(classroomName),startTime,fromDate);
+    void createClass(Schedule schedule, int startTime, int duration, String classroomName, String lectureName, String professor, Date fromDate, Date toDate)
+            throws DatesException,DurationException,ClassroomDoesntExistException{
 
-        // TODO ovo ti nije dobro linija 23 msm da ne treba continue ili ako hoces izvuces cl van fora i onda proveris sa nekim flagom
-        //  todo pokriti exception TermDoesntExistException
-        if(schedule.getScheduleMap().get(termin)==null){
-            for(int i = 1;i<duration; i++){
-                Term termin2 = new Term(schedule.getClassroomByName(classroomName),startTime+i,fromDate);
-                if(schedule.getScheduleMap().get(termin2)==null)
-                    continue;
-                else{
-                    throw new TermTakenException("Trazeni termin se preklapa sa postojecim");
+        if(schedule.getStartHours()>startTime || schedule.getEndHours()<startTime){
+            throw new WrongStartTimeException("Vreme koje ste dali je van radnih sati");
+        }
+
+        if(fromDate.before(schedule.getStartDate() ) || toDate.after(schedule.getEndDate())){
+            throw new DatesException("Datum termina mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+        }
+
+        if(duration<1){
+            throw new DurationException("Trajanje mora biti minimum 1");
+        }
+
+        boolean flag = false;
+        for(Classroom classroom : schedule.getClassrooms()){
+            if(classroom.getName().equals(classroomName)){
+                flag = true;
+            }
+        }
+        if(!flag)
+            throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
+
+        Term termin = null;
+
+        int count = 0;
+
+        List<Term> termini = new ArrayList<>();
+
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            for(int i =0 ;i<duration; i++){
+                if(entry.getKey().getDate().equals(fromDate) && entry.getKey().getClassroom().getName().equals(classroomName)
+                        && entry.getKey().getStartTime() == startTime+i){
+                    if(entry.getValue()==null){
+                        count++;
+                        termini.add(entry.getKey());
+                    }
+                }
+                if(count==duration)
+                    break;
+            }
+            if(count==duration) {
+                if(termini.isEmpty()){
+                    throw new InternalError("Greska u bazi");
                 }
                 ClassLecture cl = new ClassLecture(lectureName, professor, startTime, duration, fromDate, toDate);
-                schedule.getScheduleMap().put(termin,cl);
-            }
-        }
-    }
-
-    void RemoveClass(Schedule schedule,Date date, int startTime, String classroomName, String lectureName){
-        Term termin = new Term(schedule.getClassroomByName(classroomName),startTime,date);
-        if(!schedule.getScheduleMap().containsKey(termin))
-        {
-            throw new TermDoesntExistException("Termin ne postoji");
-        }
-
-        ClassLecture cl = schedule.getScheduleMap().get(termin);
-        int duration = cl.getDuration();
-
-        if(cl.getStartTime()!=startTime && cl.getStartDate()!=date)
-        {
-            throw new WrongStartTimeException("Uneti podaci se napoklapaju sa bazom. (Vervoatno ste vreme pogresno uneli");
-        }
-        if(cl.getStartDate()!=date)
-        {
-            throw new WrongDateException("Uneti podaci se napoklapaju sa bazom. (Vervoatno ste datum pogresno uneli");
-        }
-        if(cl.getClassName().equals(lectureName))
-        {
-            throw new WrongLectureNameException("Uneti podaci se napoklapaju sa bazom. (Vervoatno ste ime pogresno uneli");
-        }
-
-        for(int i = 1; i< duration; i++){
-            schedule.getScheduleMap().remove(termin);
-            termin = new Term(schedule.getClassroomByName(classroomName),startTime+i,date);
-        }
-    }
-
-    void RescheduleClass(Schedule schedule, Date oldDate, int oldStartTime, String oldClassroomName, String lectureName,
-                         Date newDate, int newStartTime, String newClassroomName){
-        Term termin = new Term(schedule.getClassroomByName(oldClassroomName),oldStartTime,oldDate);
-        if(!schedule.getScheduleMap().containsKey(termin))
-        {
-            throw new TermDoesntExistException("Termin ne postoji");
-        }
-
-        ClassLecture cl = schedule.getScheduleMap().get(termin);
-        int duration = cl.getDuration();
-
-        if(cl.getStartTime()!=oldStartTime && cl.getStartDate()!=oldDate)
-        {
-            throw new WrongStartTimeException("Uneti podaci se napoklapaju sa bazom. (Vervoatno ste vreme pogresno uneli");
-        }
-        if(cl.getStartDate()!=oldDate)
-        {
-            throw new WrongDateException("Uneti podaci se napoklapaju sa bazom. (Vervoatno ste datum pogresno uneli");
-        }
-        if(cl.getClassName().equals(lectureName))
-        {
-            throw new WrongLectureNameException("Uneti podaci se napoklapaju sa bazom. (Vervoatno ste ime pogresno uneli");
-        }
-
-
-        termin = new Term(schedule.getClassroomByName(oldClassroomName),newStartTime,newDate);
-
-        if(schedule.getScheduleMap().get(termin)==null){
-            for(int i = 1;i<duration; i++){
-                Term termin2 = new Term(schedule.getClassroomByName(oldClassroomName),newStartTime+i,newDate);
-                if(schedule.getScheduleMap().get(termin2)==null)
-                    continue;
-                else{
-                    throw new TermTakenException("Trazeni termin se preklapa sa postojecim");
+                for(Term t : termini){
+                    schedule.getScheduleMap().put(t,cl);
                 }
-                ClassLecture cl2 = new ClassLecture(lectureName, cl.getProfessor(), newStartTime, duration, newDate, cl.getEndDate());
-                schedule.getScheduleMap().put(termin,cl);
+                return;
             }
         }
+        if(count!=duration)
+        {
+            throw new TermDoesntExistException("ne postoji slobodan termin");
+        }
+    }
 
+    void RemoveClass(Schedule schedule,Date date, int startTime, String classroomName, String lectureName)
+            throws DatesException,DurationException,ClassroomDoesntExistException,WrongStartTimeException{
+
+        if(schedule.getStartHours()>startTime || schedule.getEndHours()<startTime){
+            throw new WrongStartTimeException("Vreme koje ste dali je van radnih sati");
+        }
+        if(date.before(schedule.getStartDate()) || date.before(schedule.getStartDate())){
+            throw new DatesException("Datum termina mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+        }
+        boolean flag = false;
+        for(Classroom classroom : schedule.getClassrooms()){
+            if(classroom.getName().equals(classroomName)){
+                flag = true;
+            }
+        }
+        if(!flag)
+            throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
+
+        int duration = 0;
+
+
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            if(entry.getKey().getDate().equals(date) && entry.getKey().getClassroom().getName().equals(classroomName)
+                    && entry.getKey().getStartTime() == startTime && entry.getValue().getClassName().equals(lectureName)){
+                duration = entry.getValue().getDuration();
+            }
+        }
+        if(duration==0)
+        {
+            throw new ClassLectureDoesntExistException("ne postoji cas sa zadatim podacima");
+        }
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            for(int i = 0; i<duration; i++){
+                if(entry.getKey().getDate().equals(date) && entry.getKey().getClassroom().getName().equals(classroomName)
+                        && entry.getKey().getStartTime() == startTime+i)
+                {
+                    schedule.getScheduleMap().put(entry.getKey(),null);
+                }
+            }
+        }
+    }
+
+    void RescheduleClass(Schedule schedule, Date oldDate, int oldStartTime, String oldClassroomName, String lectureName, Date newDate, int newStartTime, String newClassroomName)
+            throws DatesException,ClassroomDoesntExistException,WrongStartTimeException{
+
+        if(schedule.getStartHours()>oldStartTime || schedule.getEndHours()<oldStartTime || schedule.getStartHours()>newStartTime || schedule.getEndHours()<newStartTime){
+            throw new WrongStartTimeException("Vreme koje ste dali je van radnih sati");
+        }
+        if(oldDate.before(schedule.getStartDate()) || oldDate.after(schedule.getEndDate()) || newDate.before(schedule.getStartDate()) || newDate.after(schedule.getEndDate())){
+            throw new DatesException("Datum termina mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+        }
+        boolean flag1 = false;
+        boolean flag2 = false;
+        for(Classroom classroom : schedule.getClassrooms()){
+            if(classroom.getName().equals(oldClassroomName)){
+                flag1 = true;
+            }
+            if(classroom.getName().equals(newClassroomName)){
+                flag2 = true;
+            }
+        }
+        if(!flag1 || !flag2)
+            throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
+
+        int duration = 0;
+        ClassLecture cl = null;
+
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            if(entry.getKey().getDate().equals(oldDate) && entry.getKey().getClassroom().getName().equals(oldClassroomName)
+                    && entry.getKey().getStartTime() == oldStartTime && entry.getValue().getClassName().equals(lectureName)){
+                duration = entry.getValue().getDuration();
+                cl = entry.getValue();
+            }
+        }
+        if(cl==null){
+            throw new ClassLectureDoesntExistException("ne postoji cas sa zadatim podacima");
+        }
+
+        int count = 0;
+
+        List<Term> termini = new ArrayList<>();
+
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            for(int i =0 ;i<duration; i++){
+                if(entry.getKey().getDate().equals(newDate) && entry.getKey().getClassroom().getName().equals(newClassroomName)
+                        && entry.getKey().getStartTime() == newStartTime+i){
+                    if(entry.getValue()==null){
+                        count++;
+                        termini.add(entry.getKey());
+                    }
+                }
+                if(count==duration)
+                    break;
+            }
+            if(count==duration) {
+                if(termini.isEmpty()){
+                    throw new InternalError("Greska u bazi");
+                }
+                for(Term t : termini){
+                    schedule.getScheduleMap().put(t,cl);
+                }
+                return;
+            }
+        }
+        if(count!=duration)
+        {
+            throw new TermDoesntExistException("ne postoji slobodan termin");
+        }
+
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            for(int i = 0; i<duration; i++){
+                if(entry.getKey().getDate().equals(oldDate) && entry.getKey().getClassroom().getName().equals(oldClassroomName)
+                        && entry.getKey().getStartTime() == oldStartTime+i)
+                {
+                    schedule.getScheduleMap().put(entry.getKey(),null);
+                }
+            }
+        }
     }
 }
