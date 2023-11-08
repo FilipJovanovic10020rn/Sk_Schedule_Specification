@@ -29,20 +29,6 @@ public class Schedule {
         this.endHours = endHours;
     }
 
-//    public Schedule(String name, Map<Term, ClassLecture> scheduleMap, List<Classroom> classrooms,) {
-//        this.name = name;
-//        this.scheduleMap = scheduleMap;
-//        this.classrooms = classrooms;
-//    }
-    public void createDates(Date startDate, Date toDate) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(startDate);
-
-        while (!calendar.getTime().after(toDate)) {
-            System.out.println(calendar.getTime());
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-        }
-    }
     public Classroom getClassroomByName(String name){
         for(Classroom c: this.classrooms){
             if(c.getName().equals(name))

@@ -333,19 +333,153 @@ public interface ClassSchedule {
      * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
      * @param capacity // broj mesta u ucionici za termin
      */
-    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, int capacity);
-    // TODO loseUnetDuration, dateOutOfBounds, noSuchClasroom, capacityExc
+    default List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, int capacity)
+        throws DurationException, DatesException, LowCapacityException{
+
+        return null;
+    }
 
     /**
-     * Pretraga termina po parametrima
+     * Pretraga termina po dodacima ucionice, datumu i duzini termina
      * @param schedule // raspored nad kojim radimo
      * @param date // datum trazenog termina
      * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
      * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
      * @param addOns // dodaci koje ucionica ima ( projector, computers, pen ) za termin
+     * @return lista termina koji zadovoljavaju kriterijume pretrage u zavisnosti od isFree
+     * @throws DatesException ako je datum van datuma rasporeda
+     * @throws DurationException ako je trajanje manje od 1
+     * @throws ClassroomDoesntExistException ako ucionica sa trazenim dodacima ne postoji
+     * @throws DuplicateAddOnsException ako postoje duplicirani dodaci
      */
-    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, AddOns ... addOns);
-    // TODO loseUnetDuration, dateOutOfBounds, noSuchClasroom, addOnsExc
+    default List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, AddOns... addOns)
+        throws DatesException,DurationException,ClassroomDoesntExistException,DuplicateAddOnsException{
+
+        if(date.before(schedule.getStartDate() ) || date.after(schedule.getEndDate())){
+            throw new DatesException("Datum termina mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+        }
+
+        if(duration<1){
+            throw new DurationException("Trajanje mora biti minimum 1");
+        }
+
+        Set<AddOns> uniqueAddOnsSet = new HashSet<>();
+
+        for (AddOns addOn : addOns) {
+            if (!uniqueAddOnsSet.add(addOn)) {
+                throw new DuplicateAddOnsException("Duplirani dodatak: " + addOn);
+            }
+        }
+
+        List<AddOns> addOnsList = new ArrayList<>(uniqueAddOnsSet);
+
+        List<Classroom> validClassrooms = new ArrayList<>();
+
+        for(Classroom classroom : schedule.getClassrooms()){
+            if(classroom.hasAddOns(addOnsList)){
+                validClassrooms.add(classroom);
+            }
+        }
+
+        if(validClassrooms.isEmpty()){
+            throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
+        }
+
+        List<Term> termsToReturn = new ArrayList<>();
+
+        // goes trough all in map
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+                // if the term is that date and is one of valid classroms
+                if(entry.getKey().getDate().equals(date) && validClassrooms.contains(entry.getKey().getClassroom())) {
+                    // if its asked to find free terms
+                    if(isFree){
+                        // checks if the term is free
+                        if(entry.getValue()== null){
+                            boolean isTermValid = true;
+                            // checks if the final time would go out of bounds
+                            if(entry.getKey().getStartTime()+duration > schedule.getEndHours()){
+                                isTermValid = false;
+                            }
+
+                            // goes through the duration
+                            for(int i = 1; i<duration; i++){
+                                // no need to go through all if its already broken
+                                if(isTermValid == false){
+                                    break;
+                                }
+                                // checks if the next time would go out of bounds
+                                if(entry.getKey().getStartTime()+i > schedule.getEndHours()){
+                                    isTermValid = false;
+                                    break;
+                                }
+                                Term nextTerm = new Term(entry.getKey().getClassroom(),entry.getKey().getStartTime()+i,date);
+
+                                // finds the next term and checks if its not taken
+                                for(Map.Entry<Term,ClassLecture> entry1 : schedule.getScheduleMap().entrySet()) {
+                                    if(entry1.getKey().isTermTheSame(nextTerm.getClassroom(), nextTerm.getStartTime(), date)){
+                                        if(entry1.getValue()==null){
+                                            break;
+                                        }
+                                        else{
+                                            isTermValid = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if(isTermValid){
+                                termsToReturn.add(entry.getKey());
+                            }
+
+                        }
+                    }
+                    else{
+                        if(entry.getValue() != null){
+//                            boolean isTermValid = true;
+                            // todo ovo mislim da ne treba kada se trazi zauzeto jer nas ne zanima duzina koliko je zauzeto samo kada
+                            // checks if the final time would go out of bounds
+//                            if(entry.getKey().getStartTime()+duration > schedule.getEndHours()){
+//                                isTermValid = false;
+//                            }
+//
+//                            // goes through the duration
+//                            for(int i = 1; i<duration; i++){
+//                                // no need to go through all if its already broken
+//                                if(isTermValid == false){
+//                                    break;
+//                                }
+//                                // checks if the next time would go out of bounds
+//                                if(entry.getKey().getStartTime()+i > schedule.getEndHours()){
+//                                    isTermValid = false;
+//                                    break;
+//                                }
+//                                Term nextTerm = new Term(entry.getKey().getClassroom(),entry.getKey().getStartTime()+i,date);
+//
+//                                // finds the next term and checks if its taken
+//                                for(Map.Entry<Term,ClassLecture> entry1 : schedule.getScheduleMap().entrySet()) {
+//                                    if(entry1.getKey().isTermTheSame(nextTerm.getClassroom(), nextTerm.getStartTime(), date)){
+//                                        if(entry1.getValue()==null){
+//                                            isTermValid = false;
+//                                            break;
+//                                        }
+//                                        else{
+//                                            break;
+//                                        }
+//                                    }
+//                                }
+//                            }
+
+//                            if(isTermValid){
+                                termsToReturn.add(entry.getKey());
+//                            }
+                        }
+                    }
+                }
+            }
+        // todo mozda exception da ne postoji ni jedan tj lista je prazna?
+        return termsToReturn;
+    }
 
     /**
      * Pretraga termina kada je dati profesor zauzet ili slobodan
@@ -357,9 +491,22 @@ public interface ClassSchedule {
      * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
      * @return lista termina koji zadovoljavaju kriterijume pretrage u zavisnosti od isFree
      * @throws ProfessorDoesntExistException ako profesor ne postoji
+     * @throws DatesException ako datumi izlaze van datuma rasporeda ili su napisani pogresnim redosledom (fromDate>toDate)
      */
     default List<Term> findTerms(Schedule schedule,Date fromDate, Date toDate , String professor, boolean isFree)
-        throws ProfessorDoesntExistException{
+        throws ProfessorDoesntExistException,DatesException{
+
+        if(fromDate.before(schedule.getStartDate() ) || fromDate.after(schedule.getEndDate())){
+            throw new DatesException("Datum pocetka mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+        }
+        if(toDate != null){
+            if(toDate.before(schedule.getStartDate()) || toDate.after(schedule.getEndDate())){
+                throw new DatesException("Datum zavrsetka mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+            }
+            if(toDate.before(fromDate)){
+                throw new DatesException("Datum zavrsetka mora biti posle datuma pocetka");
+            }
+        }
 
         List<Term> termList = new ArrayList<>();
 
