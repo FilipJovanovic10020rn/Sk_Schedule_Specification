@@ -13,6 +13,7 @@ public interface ClassSchedule {
 
     /**
      * Inicijalizuje novi raspored
+     *
      * @param name // naziv novog rasporeda
      * @param classrooms // lista ucionica skole
      * @param startDate // datum od pocetka rasporeda
@@ -66,6 +67,7 @@ public interface ClassSchedule {
 
     /**
      * Kreira novu ucionicu
+     *
      * @param classrooms // lista ucionica
      * @param name // naziv ucionice
      * @param capacity // broj mesta u ucionici
@@ -88,6 +90,20 @@ public interface ClassSchedule {
             throw new LowCapacityException("Kapacitet ucionice mora biti barem 1");
         }
 
+        List<AddOns> addOnsList = createAddOnsList(addOns);
+
+
+        return new Classroom(name,capacity,addOnsList);
+    }
+
+    /**
+     * kreira listu dodataka
+     *
+     * @param addOns // niz dodataka
+     * @return lista bez ponavaljanja
+     * @throws DuplicateAddOnsException ako ima duplikata
+     */
+    private List<AddOns> createAddOnsList(AddOns[] addOns){
 
         Set<AddOns> uniqueAddOnsSet = new HashSet<>();
 
@@ -97,15 +113,13 @@ public interface ClassSchedule {
             }
         }
 
-        List<AddOns> addOnsList = new ArrayList<>(uniqueAddOnsSet);
-
-
-        return new Classroom(name,capacity,addOnsList);
+        return new ArrayList<>(uniqueAddOnsSet);
     }
 
 
     /**
      * Kreira novi cas
+     *
      * @param schedule // raspored nad kojim se radi
      * @param startTime // pocetak predavanja
      * @param duration // trajanje predavanja
@@ -124,6 +138,7 @@ public interface ClassSchedule {
 
     /**
      * Brise cas iz rasporeda
+     *
      * @param fromDate // datum predavanja
      * @param toDate // datum do kog traju predavanja ili null ako je predavanje samo jednog dana
      * @param startTime // pocetak predavanja
@@ -140,6 +155,7 @@ public interface ClassSchedule {
 
     /**
      * premesta cas iz rasporeda
+     *
      * @param schedule // raspored nad kojim radimo
      * @param oldFromDate // datum do kog traju predavanja koje hocemo da promenimo ili null ako je predavanje samo jednog dana
      * @param oldToDate // datum do kada  predavanja koji hocemo da promenimo
@@ -167,7 +183,8 @@ public interface ClassSchedule {
 
 
     /**
-     * Pretraga za ucionicu po parametrima
+     * Pretraga za ucionicu po kapacitetu i dodacima
+     *
      * @param schedule // raspored nad kojim radimo
      * @param capacity // broj mesta u ucionici ( ako nije bitan parametar proslediti -1 ili 0 )
      * @param addOns // dodaci koje ucionica ima ( projector, computers, pen )
@@ -184,15 +201,7 @@ public interface ClassSchedule {
             throw new LowCapacityException("Kapacitet mora biti minimum 1");
         }
 
-        Set<AddOns> uniqueAddOnsSet = new HashSet<>();
-
-        for (AddOns addOn : addOns) {
-            if (!uniqueAddOnsSet.add(addOn)) {
-                throw new DuplicateAddOnsException("Duplirani dodatak: " + addOn);
-            }
-        }
-        List<AddOns> addOnsList = new ArrayList<>(uniqueAddOnsSet);
-
+        List<AddOns> addOnsList = createAddOnsList(addOns);
 
         for(Classroom classroom :schedule.getClassrooms()){
             // trazimo ucionice ne sa tacnim kapacitetom vec sa minimum tim kapacitetom
@@ -217,7 +226,8 @@ public interface ClassSchedule {
         return  classroomsToReturn;
     }
     /**
-     * Pretraga za ucionicu po parametrima
+     * Pretraga za ucionicu po dodacima
+     *
      * @param schedule // raspored nad kojim radimo
      * @param addOns // dodaci koje ucionica ima ( projector, computers, pen )
      * @return lista ucionica koje se poklapaju sa  dodacima
@@ -228,15 +238,7 @@ public interface ClassSchedule {
             throws ClassroomDoesntExistException, DuplicateAddOnsException{
         List<Classroom> classroomsToReturn = new ArrayList<>();
 
-        Set<AddOns> uniqueAddOnsSet = new HashSet<>();
-
-        for (AddOns addOn : addOns) {
-            if (!uniqueAddOnsSet.add(addOn)) {
-                throw new DuplicateAddOnsException("Duplirani dodatak: " + addOn);
-            }
-        }
-        List<AddOns> addOnsList = new ArrayList<>(uniqueAddOnsSet);
-
+        List<AddOns> addOnsList = createAddOnsList(addOns);
 
         for(Classroom classroom :schedule.getClassrooms()){
             if(!addOnsList.isEmpty()){
@@ -258,7 +260,8 @@ public interface ClassSchedule {
         return  classroomsToReturn;
     }
     /**
-     * Pretraga za ucionicu po parametrima
+     * Pretraga za ucionicu po kapacitetu
+     *
      * @param schedule // raspored nad kojim radimo
      * @param capacity // broj mesta u ucionici ( ako nije bitan parametar proslediti -1 ili 0 )
      * @return lista ucionica koje se poklapaju sa brojem mesta
@@ -290,57 +293,272 @@ public interface ClassSchedule {
     }
 
 
-    // TODO OVO MOZDA IPAK NE TRBA TRUE ILI FALSE
-    //  izmeniti da ne pise po parametrima nego navesti ih lepo
     /**
-     * Pretraga termina po parametrima
+     * Pretraga termina po datumu i trajanju
+     *
      * @param schedule // raspored nad kojim radimo
      * @param date // datum trazenog termina
      * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
-     * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
+     * @return lista termina koji zadovoljavaju kriterijume pretrage
+     * @throws DatesException ako je datum van datuma rasporeda
+     * @throws DurationException ako je trajanje manje od 1
+     * @throws TermDoesntExistException ako ne postoji ni jedan termin pretrage
      */
-    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree);
-    // TODO loseUnetDuration, dateOutOfBounds
+    default List<Term> findTerms(Schedule schedule, Date date, int duration)
+        throws DatesException,DurationException,TermDoesntExistException{
+
+        if(date.before(schedule.getStartDate() ) || date.after(schedule.getEndDate())){
+            throw new DatesException("Datum termina mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+        }
+
+        if(duration<1){
+            throw new DurationException("Trajanje mora biti minimum 1");
+        }
+
+        List<Term> termsToReturn = new ArrayList<>();
+
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()) {
+            // checks if the date is this date
+            if(entry.getKey().getDate().equals(date)) {
+                // goes through the map again and checks if the entry(term) is free
+                isTermFreeAndAddToList(schedule, duration, termsToReturn, entry);
+            }
+        }
+
+        if(termsToReturn.isEmpty()){
+            throw new TermDoesntExistException("Ne postoji ni jedan termin datuma: " + date + " za trajanje: "+duration);
+        }
+
+        return termsToReturn;
+    }
 
     /**
-     * Pretraga termina po parametrima
+     * Proverava da li je slobodan termin i dodaje ga u listu
+     *
+     * @param schedule // raspored nad kojim se radi
+     * @param duration // trajanje casa
+     * @param termList // lista termina u koju se dodaje validan termin
+     * @param entry // jedan element u mapi
+     */
+    private void isTermFreeAndAddToList(Schedule schedule, int duration, List<Term> termList, Map.Entry<Term, ClassLecture> entry){
+        if(entry.getValue()==null){
+            boolean isTermValid = entry.getKey().getStartTime() + duration <= schedule.getEndHours();
+            // checks if the final time would go out of bounds
+            for(int i =1;i<duration;i++){
+                if(!isTermValid){
+                    break;
+                }
+                Term nextTerm = new Term(entry.getKey().getClassroom(),entry.getKey().getStartTime()+i,entry.getKey().getDate());
+                // finds the next term and checks if it's not taken
+                for(Map.Entry<Term,ClassLecture> entry1 : schedule.getScheduleMap().entrySet()) {
+                    if(entry1.getKey().isTermTheSame(nextTerm.getClassroom(), nextTerm.getStartTime(), entry.getKey().getDate())){
+                        if (entry1.getValue() != null) {
+                            isTermValid = false;
+                        }
+                        break;
+                    }
+                }
+            }
+            if(isTermValid){
+                termList.add(entry.getKey());
+            }
+        }
+    }
+
+
+    /**
+     * Pretraga termina po datumu, trajanju i nazivu ucionice
+     *
      * @param schedule // raspored nad kojim radimo
      * @param date // datum trazenog termina
      * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
      * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
      * @param classroomName // naziv ucionice za trazeni termin
+     * @return lista termina koji zadovoljavaju kriterijume pretrage u zavisnosti od isFree
+     * @throws DatesException ako je datum van datuma rasporeda
+     * @throws DurationException ako je trajanje manje od 1
+     * @throws ClassroomDoesntExistException ako ucionica sa datim imenom ne postoji
      */
-    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, String classroomName);
-    // TODO loseUnetDuration, dateOutOfBounds, noSuchClasroom
+    default List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, String classroomName)
+        throws DurationException,DatesException,ClassroomDoesntExistException{
+        if(date.before(schedule.getStartDate() ) || date.after(schedule.getEndDate())){
+            throw new DatesException("Datum termina mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+        }
+
+        if(duration<1){
+            throw new DurationException("Trajanje mora biti minimum 1");
+        }
+
+        Classroom classroom = schedule.getClassroomByName(classroomName);
+
+        if(classroom == null){
+            throw new ClassroomDoesntExistException("Ne postoji ucionica sa imenom: "+ classroomName);
+        }
+
+        List<Term> termsToReturn = new ArrayList<>();
+
+        // goes through all in map
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            // if the term is that date and is one of valid classroms
+            if(entry.getKey().getDate().equals(date) && entry.getKey().getClassroom().equals(classroom)) {
+                // if it's asked to find free terms
+                if(isFree){
+                    // goes through the map again and checks if the entry(term) is free
+                    isTermFreeAndAddToList(schedule,duration,termsToReturn,entry);
+                }
+                else{
+                    if(entry.getValue() != null){
+                        termsToReturn.add(entry.getKey());
+                    }
+                }
+            }
+        }
+        // todo mozda exception da ne postoji ni jedan tj lista je prazna?
+        return termsToReturn;
+
+
+    }
 
     /**
-     * Pretraga termina po parametrima
+     * Pretraga termina po datumu, trajanju, kapacitetu ucionice i dodacima za ucionicu
+     *
      * @param schedule // raspored nad kojim radimo
      * @param date // datum trazenog termina
      * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
      * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
      * @param capacity // broj mesta u ucionici za termin
      * @param addOns // dodaci koje ucionica ima ( projector, computers, pen ) za termin
+     * @return lista termina koji zadovoljavaju kriterijume pretrage u zavisnosti od isFree
+     * @throws DatesException ako je datum van datuma rasporeda
+     * @throws DurationException ako je trajanje manje od 1
+     * @throws LowCapacityException ako ne postoji ucionica sa kapacitetom
+     * @throws ClassroomDoesntExistException ako ucionica ne postoji
+     * @throws DuplicateAddOnsException ako postoje duplicirani dodaci
      */
-    List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, int capacity, AddOns ... addOns);
-    // TODO loseUnetDuration, dateOutOfBounds, noSuchClasroom, capacityExc, addOnsExc
+    default List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, int capacity, AddOns... addOns)
+        throws DurationException,DatesException,ClassroomDoesntExistException,LowCapacityException,DuplicateAddOnsException{
+
+        ThrowExceptionIfNeeded(schedule, date, duration, capacity);
+
+        List<AddOns> addOnsList = createAddOnsList(addOns);
+
+        List<Classroom> validClassrooms = new ArrayList<>();
+
+        for(Classroom classroom : schedule.getClassrooms()){
+            if(classroom.getCapacity() >= capacity){
+                if(classroom.hasAddOns(addOnsList)){
+                    validClassrooms.add(classroom);
+                }
+            }
+        }
+
+        if(validClassrooms.isEmpty()){
+            throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
+        }
+
+        List<Term> termsToReturn = new ArrayList<>();
+
+        // goes through all in map
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            // if the term is that date and is one of valid classrooms
+            if(entry.getKey().getDate().equals(date) && validClassrooms.contains(entry.getKey().getClassroom())) {
+                // if it's asked to find free terms
+                if(isFree){
+                    // goes through the map again and checks if the entry(term) is free
+                    isTermFreeAndAddToList(schedule, duration, termsToReturn, entry);
+                }
+                else{
+                    if(entry.getValue() != null){
+                        termsToReturn.add(entry.getKey());
+                    }
+                }
+            }
+        }
+        // todo mozda exception da ne postoji ni jedan tj lista je prazna?
+        return termsToReturn;
+    }
 
     /**
-     * Pretraga termina po parametrima
+     * Proverava da li su podaci validni i baca odgovarajuce greske
+     *
+     * @param schedule // raspored nad kojim se radi
+     * @param date // datum
+     * @param duration // trajanje
+     * @param capacity // kapacitet
+     * @throws DatesException ako je datum van rasporeda
+     * @throws DurationException ako je trajanje manje od 1
+     * @throws LowCapacityException ako je kapacitet manji od 1
+     */
+    private void ThrowExceptionIfNeeded(Schedule schedule, Date date, int duration, int capacity) {
+        if(date.before(schedule.getStartDate() ) || date.after(schedule.getEndDate())){
+            throw new DatesException("Datum termina mora biti od: "+ schedule.getStartDate() + " do " + schedule.getEndDate());
+        }
+
+        if(duration<1){
+            throw new DurationException("Trajanje mora biti minimum 1");
+        }
+
+        if(capacity<1){
+            throw new LowCapacityException("Kapacitet mora biti minimum 1");
+        }
+    }
+
+    /**
+     * Pretraga termina po datumu, trajanju i kapacitetu ucionice
+     *
      * @param schedule // raspored nad kojim radimo
      * @param date // datum trazenog termina
      * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
      * @param isFree // boolean true ili false u zavisnosti da li se traze slobodni termini ili zauzeti respektivno
      * @param capacity // broj mesta u ucionici za termin
+     * @return lista termina koji zadovoljavaju kriterijume pretrage u zavisnosti od isFree
+     * @throws DatesException ako je datum van datuma rasporeda
+     * @throws DurationException ako je trajanje manje od 1
+     * @throws LowCapacityException ako ne postoji ucionica sa kapacitetom
+     * @throws ClassroomDoesntExistException ako ucionica ne postoji
      */
     default List<Term> findTerms(Schedule schedule, Date date, int duration, boolean isFree, int capacity)
-        throws DurationException, DatesException, LowCapacityException{
+        throws DurationException, DatesException, LowCapacityException, ClassroomDoesntExistException{
 
-        return null;
+        ThrowExceptionIfNeeded(schedule, date, duration, capacity);
+
+        List<Classroom> validClassrooms = new ArrayList<>();
+
+        for(Classroom classroom : schedule.getClassrooms()){
+            if(classroom.getCapacity() >= capacity){
+                validClassrooms.add(classroom);
+            }
+        }
+
+        if(validClassrooms.isEmpty()){
+            throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
+        }
+
+        List<Term> termsToReturn = new ArrayList<>();
+
+        // goes through all in map
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            // if the term is that date and is one of valid classrooms
+            if(entry.getKey().getDate().equals(date) && validClassrooms.contains(entry.getKey().getClassroom())) {
+                // if it's asked to find free terms
+                if(isFree){
+                    // goes through the map again and checks if the entry(term) is free
+                    isTermFreeAndAddToList(schedule, duration, termsToReturn, entry);
+                }
+                else{
+                    if(entry.getValue() != null){
+                        termsToReturn.add(entry.getKey());
+                    }
+                }
+            }
+        }
+        // todo mozda exception da ne postoji ni jedan tj lista je prazna?
+        return termsToReturn;
     }
 
     /**
-     * Pretraga termina po dodacima ucionice, datumu i duzini termina
+     * Pretraga termina po dodacima ucionice, datumu i trajanju
+     *
      * @param schedule // raspored nad kojim radimo
      * @param date // datum trazenog termina
      * @param duration // trajanje trazenog termina ( duzina slobodnog termina ) ( od 12 - 15 za duration 3)
@@ -363,15 +581,7 @@ public interface ClassSchedule {
             throw new DurationException("Trajanje mora biti minimum 1");
         }
 
-        Set<AddOns> uniqueAddOnsSet = new HashSet<>();
-
-        for (AddOns addOn : addOns) {
-            if (!uniqueAddOnsSet.add(addOn)) {
-                throw new DuplicateAddOnsException("Duplirani dodatak: " + addOn);
-            }
-        }
-
-        List<AddOns> addOnsList = new ArrayList<>(uniqueAddOnsSet);
+        List<AddOns> addOnsList = createAddOnsList(addOns);
 
         List<Classroom> validClassrooms = new ArrayList<>();
 
@@ -387,52 +597,14 @@ public interface ClassSchedule {
 
         List<Term> termsToReturn = new ArrayList<>();
 
-        // goes trough all in map
+        // goes through all in map
         for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
-                // if the term is that date and is one of valid classroms
+                // if the term is that date and is one of valid classrooms
                 if(entry.getKey().getDate().equals(date) && validClassrooms.contains(entry.getKey().getClassroom())) {
-                    // if its asked to find free terms
+                    // if it's asked to find free terms
                     if(isFree){
-                        // checks if the term is free
-                        if(entry.getValue()== null){
-                            boolean isTermValid = true;
-                            // checks if the final time would go out of bounds
-                            if(entry.getKey().getStartTime()+duration > schedule.getEndHours()){
-                                isTermValid = false;
-                            }
-
-                            // goes through the duration
-                            for(int i = 1; i<duration; i++){
-                                // no need to go through all if its already broken
-                                if(isTermValid == false){
-                                    break;
-                                }
-                                // checks if the next time would go out of bounds
-                                if(entry.getKey().getStartTime()+i > schedule.getEndHours()){
-                                    isTermValid = false;
-                                    break;
-                                }
-                                Term nextTerm = new Term(entry.getKey().getClassroom(),entry.getKey().getStartTime()+i,date);
-
-                                // finds the next term and checks if its not taken
-                                for(Map.Entry<Term,ClassLecture> entry1 : schedule.getScheduleMap().entrySet()) {
-                                    if(entry1.getKey().isTermTheSame(nextTerm.getClassroom(), nextTerm.getStartTime(), date)){
-                                        if(entry1.getValue()==null){
-                                            break;
-                                        }
-                                        else{
-                                            isTermValid = false;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-
-                            if(isTermValid){
-                                termsToReturn.add(entry.getKey());
-                            }
-
-                        }
+                        // goes through the map again and checks if the entry(term) is free
+                        isTermFreeAndAddToList(schedule, duration, termsToReturn, entry);
                     }
                     else{
                         if(entry.getValue() != null){
@@ -534,6 +706,7 @@ public interface ClassSchedule {
             throw new ProfessorDoesntExistException("Profesor sa imenom: " +professor + " ne postoji");
         }
         if(!isFree){
+            // lista zauzetih termina
             return termList;
         }
 
@@ -558,6 +731,7 @@ public interface ClassSchedule {
                 for(Term notFreeTerm : termList){
                     if(notFreeTerm.isTermTheSame(null,i,calendar.getTime())){
                         sameTerm = true;
+                        break;
                     }
                 }
                 if(sameTerm){
@@ -591,7 +765,7 @@ public interface ClassSchedule {
 
         for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
             if(entry.getValue().getClassName().equals(className)){
-                // todo ovo mozda izmeniti da radi sa ovim ili izmeniti da se ne vraca termin nego nesto drugo kao 12-14
+                // todo ovo mozda izmeniti da samo vraca prvi ili izmeniti da se ne vraca termin i cas (entry)
 //                if(entry.getValue().getStartTime() == entry.getKey().getStartTime()){
                     termList.add(entry.getKey());
 //                }
