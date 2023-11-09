@@ -3,11 +3,10 @@ package rs.raf.schedule_management;
 import rs.raf.classes.ClassLecture;
 import rs.raf.classes.Classroom;
 import rs.raf.classes.Term;
+import rs.raf.enums.AddOns;
+import rs.raf.exceptions.DuplicateAddOnsException;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class DatePrinter {
     public static void printDates(Date startDate, Date toDate) {
@@ -45,12 +44,58 @@ public class DatePrinter {
 
     public static void main(String[] args) {
         // Example usage
-        Date startDate = new Date(2023-1900,8,13);  // Replace with your actual start date
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_MONTH, 0);  // Adding 10 days for example
-//        Date toDate = calendar.getTime();
-        Date toDate = new Date(2023-1900,9,13);
+//        Date startDate = new Date(2023-1900,8,13);  // Replace with your actual start date
+//        Calendar calendar = Calendar.getInstance();
+//        calendar.add(Calendar.DAY_OF_MONTH, 0);  // Adding 10 days for example
+////        Date toDate = calendar.getTime();
+//        Date toDate = new Date(2023-1900,9,13);
+//
+//        printDates(startDate, toDate);
 
-        printDates(startDate, toDate);
+
+        String input = "5,projector,whiteboard,pen,pen";
+        String[] parts = input.split(",");
+        List<String> addonsString = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(parts, 1, parts.length)));
+
+        ArrayList<AddOns> addOns = new ArrayList<>();
+
+        for(String s: addonsString){
+            if(s.equals("projector"))
+                addOns.add(AddOns.PROJECTOR);
+            else if (s.equals("whiteboard")) {
+                addOns.add(AddOns.WHITEBOARD);
+            }
+            else if (s.equals("computers")) {
+                addOns.add(AddOns.COMPUTERS);
+            }
+            else if (s.equals("pen")) {
+                addOns.add(AddOns.PEN);
+            }
+        }
+
+
+        addonstest(addOns.toArray(new AddOns[0]));
+
     }
+
+    private static void addonstest(AddOns ... addOns){
+        List<AddOns> addOnsList = createAddOnsList(addOns);
+        System.out.println(addOnsList);
+    }
+
+    private static List<AddOns> createAddOnsList(AddOns[] addOns){
+
+        Set<AddOns> uniqueAddOnsSet = new HashSet<>();
+
+        for (AddOns addOn : addOns) {
+            if (!uniqueAddOnsSet.add(addOn)) {
+                throw new DuplicateAddOnsException("Duplirani dodatak: " + addOn);
+            }
+        }
+
+        return new ArrayList<>(uniqueAddOnsSet);
+    }
+
+
+
 }
