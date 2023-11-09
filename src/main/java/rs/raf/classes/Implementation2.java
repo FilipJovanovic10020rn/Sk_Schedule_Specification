@@ -179,32 +179,69 @@ public class Implementation2 {
         if(!flag1 || !flag2)
             throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
 
+        int count =0;
         int duration = 0;
         ClassLecture cl = null;
-        Date toDate = null;
+        Date toDate;
+        Date oldToDate = null;
 
-        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
-            if(entry.getKey().getDate().equals(oldDate) && entry.getKey().getClassroom().getName().equals(oldClassroomName)
-                    && entry.getKey().getStartTime() == oldStartTime && entry.getValue().getClassName().equals(lectureName)){
-                duration = entry.getValue().getDuration();
-                cl = entry.getValue();
-                toDate = entry.getValue().getEndDate();
-            }
-        }
-        if(cl==null){
-            throw new ClassLectureDoesntExistException("ne postoji cas sa zadatim podacima");
-        }
+        boolean firstDate = false;
 
-        int count = 0;
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(newDate);
 
         Calendar calendar2 = Calendar.getInstance();
         calendar.setTime(oldDate);
 
+        toDate = schedule.getEndDate();
+
+
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            if(entry.getKey().getDate().equals(oldDate) && entry.getKey().getClassroom().getName().equals(oldClassroomName)
+                    && entry.getKey().getStartTime() == oldStartTime && entry.getValue().getClassName().equals(lectureName)){
+                duration = entry.getValue().getDuration();
+                cl = entry.getValue();
+                oldToDate = entry.getValue().getEndDate();
+            }
+        }
+
+
+
+        while(calendar.getTime()!=toDate){
+            count = 0;
+            for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+                for(int i =0 ;i<duration; i++){
+                    if(entry.getKey().getDate().equals(calendar.getTime()) && entry.getKey().getClassroom().getName().equals(newClassroomName)
+                            && entry.getKey().getStartTime() == newStartTime+i){
+                        if(entry.getValue()==null){
+                            count++;
+                        }
+                    }
+                    if(count==duration)
+                        break;
+                }
+                if(count==duration){
+                    break;
+                }
+            }
+            if(count!=duration && !firstDate)
+            {
+                throw new TermDoesntExistException("ne postoji slobodan termin");
+            }
+            else if(count!=duration){
+                calendar.add(Calendar.DAY_OF_MONTH, -7);
+                toDate= calendar.getTime();
+                break;
+            }
+            firstDate = true;
+            calendar.add(Calendar.DAY_OF_MONTH, 7);
+        }
+
+        ClassLecture cl2 = new ClassLecture(lectureName, cl.getProfessor(), newStartTime, duration, newDate, toDate);
         List<Term> termini = new ArrayList<>();
 
         while(calendar.getTime()!=toDate){
+            count = 0;
             for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
                 for(int i =0 ;i<duration; i++){
                     if(entry.getKey().getDate().equals(calendar.getTime()) && entry.getKey().getClassroom().getName().equals(newClassroomName)
@@ -222,29 +259,26 @@ public class Implementation2 {
                         throw new InternalError("Greska u bazi");
                     }
                     for(Term t : termini){
-                        schedule.getScheduleMap().put(t,cl);
+                        schedule.getScheduleMap().put(t,cl2);
                     }
-                    return;
+                    break;
                 }
             }
             termini.clear();
-            if(count!=duration)
-            {
-                throw new TermDoesntExistException("ne postoji slobodan termin");
-            }
+            calendar.add(Calendar.DAY_OF_MONTH, 7);
+        }
 
+        while(calendar.getTime()!=oldToDate){
             for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
                 for(int i = 0; i<duration; i++){
-                    if(entry.getKey().getDate().equals(calendar2.getTime()) && entry.getKey().getClassroom().getName().equals(oldClassroomName)
+                    if(entry.getKey().getDate().equals(calendar.getTime()) && entry.getKey().getClassroom().getName().equals(oldClassroomName)
                             && entry.getKey().getStartTime() == oldStartTime+i)
                     {
                         schedule.getScheduleMap().put(entry.getKey(),null);
                     }
                 }
             }
-
             calendar.add(Calendar.DAY_OF_MONTH, 7);
-            calendar2.add(Calendar.DAY_OF_MONTH, 7);
         }
 
     }
