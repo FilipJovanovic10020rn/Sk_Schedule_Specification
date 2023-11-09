@@ -128,13 +128,16 @@ public interface ClassSchedule {
      * @param professor // ime profesora
      * @param fromDate // datum predavanja ili pocetni datum predavanja za predavanja koja se ponavaljaju
      * @param toDate // datum do kada traju predavanja koja se ponavaljaju ili null
-     * @throws TermDoesntExistException ako prosledjen termin ne postoji
+     * @throws DatesException ako su datumi van rasporeda ili su prosledjeni pogresnim redosledom
+     * @throws DurationException ako je trajanje manje od 1
+     * @throws WrongStartTimeException ako je vreme van radnog vremena
+     * @throws InternalError ako je doslo do greske vezane za schedule
      * @throws TermTakenException ako je termin vec zauzet
      * @throws ClassroomDoesntExistException ako ucionica ne postoji
      */
     void createClass(Schedule schedule,int startTime, int duration, String classroomName,
                              String lectureName, String professor, Date fromDate, Date toDate)
-            throws TermDoesntExistException, TermTakenException, ClassroomDoesntExistException;
+            throws DatesException,DurationException,ClassroomDoesntExistException,TermTakenException,WrongStartTimeException, InternalError;
 
     /**
      * Brise cas iz rasporeda
@@ -144,14 +147,15 @@ public interface ClassSchedule {
      * @param startTime // pocetak predavanja
      * @param classroomName // naziv ucionice u kojoj je predavanje
      * @param lectureName // naziv predavanja ( opciono )
-     * @throws TermDoesntExistException ako prosledjen termin ne postoji
+     * @throws DatesException ako su datumi van rasporeda ili su prosledjeni pogresnim redosledom
      * @throws WrongStartTimeException ako je pocetak predavanja ( startTime ) pogresno unesen
      * @throws WrongDateException ako je datum predavanja ( fromDate ) pogresno unesen
      * @throws WrongLectureNameException ako je naziv predavanja ( lectureName ) pogresno unesen
      * @throws ClassroomDoesntExistException ako ucionica ne postoji
+     * @throws ClassLectureDoesntExistException ako predmet sa tim imenom ne postoji
      */
     void RemoveClass(Schedule schedule,Date fromDate,Date toDate, int startTime, String classroomName, String lectureName)
-        throws TermDoesntExistException,WrongStartTimeException,WrongDateException,WrongLectureNameException, ClassroomDoesntExistException;
+        throws WrongStartTimeException,DatesException, WrongDateException,WrongLectureNameException, ClassroomDoesntExistException, ClassLectureDoesntExistException;
 
     /**
      * premesta cas iz rasporeda
@@ -166,8 +170,8 @@ public interface ClassSchedule {
      * @param newToDate // datum do kada traju predavanja koja se ponavaljaju ili null ako je predavanje samo jednog dana
      * @param newStartTime // novi pocetak predavanja ili null ako ne zelimo da promenimo pocetak
      * @param newClassroomName // nova ucionica za predavanje ili null ako ne zelimo da promenimo ucionicu
-     * @throws TermDoesntExistException ako prosledjen termin ne postoji
-     * @throws WrongStartTimeException ako je pocetak predavanja ( startTime ) pogresno unesen
+     * @throws DatesException ako su datumi van rasporeda ili su prosledjeni pogresnim redosledom
+     * @throws WrongStartTimeException ako je vreme van radnog vremena
      * @throws WrongDateException ako je datum predavanja ( fromDate ) pogresno unesen
      * @throws WrongLectureNameException ako je naziv predavanja ( lectureName ) pogresno unesen
      * @throws ClassroomDoesntExistException ako ucionica ne postoji
@@ -176,9 +180,7 @@ public interface ClassSchedule {
      */
     void RescheduleClass(Schedule schedule, Date oldFromDate,Date oldToDate, int oldStartTime, String oldClassroomName, String lectureName,
                          Date newFromDate,Date newToDate, int newStartTime, String newClassroomName)
-            throws TermDoesntExistException,TermTakenException,ClassroomDoesntExistException,WrongStartTimeException,
-            WrongDateException,WrongLectureNameException,WrongClassroomNameException ;
-
+        throws DatesException,ClassroomDoesntExistException,WrongStartTimeException,WrongDateException,WrongLectureNameException,WrongClassroomNameException, TermTakenException;
 
 
 
@@ -784,12 +786,24 @@ public interface ClassSchedule {
 
 
     // TODO ovo prekopirati sa predavanja
-    void exportCSV();
-    void importCSV();
-    void exportFile();
-    void importFile();
-    void exportJSON();
-    void importJSON();
+    default void exportCSV(){
+
+    };
+    default void importCSV(){
+
+    };
+    default void exportFile(){
+
+    };
+    default void importFile(){
+
+    };
+    default void exportJSON(){
+
+    };
+    default void importJSON(){
+
+    };
 
 
 }
