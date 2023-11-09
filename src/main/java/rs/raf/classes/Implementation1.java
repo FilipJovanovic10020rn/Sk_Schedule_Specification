@@ -38,8 +38,6 @@ public class Implementation1 {
         if(!flag)
             throw new ClassroomDoesntExistException("Ne postoji ucionica sa ovim parametrima");
 
-        Term termin = null;
-
         int count = 0;
 
         List<Term> termini = new ArrayList<>();
