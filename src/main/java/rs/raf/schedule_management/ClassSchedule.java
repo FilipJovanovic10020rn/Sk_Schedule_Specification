@@ -67,13 +67,12 @@ public interface ClassSchedule {
     }
 
     /**
-     * Kreira novu ucionicu
+     * Kreira novu ucionicu i dodaje je u listu
      *
      * @param classrooms // lista ucionica
      * @param name // naziv ucionice
      * @param capacity // broj mesta u ucionici
      * @param addOns // dodaci koje ucionica ima ( projector, computers, pen )
-     * @return kreiranu ucionicu
      * @throws SameNameException ako vec postoji ucionica sa istim imenom
      * @throws LowCapacityException ako je navedeni kapacitet manji od 1
      * @throws DuplicateAddOnsException ako postoje duplicirani dodaci
