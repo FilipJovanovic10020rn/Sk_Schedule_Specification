@@ -51,7 +51,8 @@ public interface ClassSchedule {
                 continue;
             }
             // for each hour
-            for(int i = fromHours; i<=toHours; i++){
+            // todo ovo sam =
+            for(int i = fromHours; i<toHours; i++){
                 // for each classroom
                 for(Classroom classroom: classrooms){
                     Term term = new Term(classroom,i,calendar.getTime());
@@ -77,7 +78,7 @@ public interface ClassSchedule {
      * @throws LowCapacityException ako je navedeni kapacitet manji od 1
      * @throws DuplicateAddOnsException ako postoje duplicirani dodaci
      */
-    default Classroom createClassroom(List<Classroom> classrooms ,String name, int capacity, AddOns ... addOns)
+    default void createClassroom(List<Classroom> classrooms ,String name, int capacity, AddOns ... addOns)
         throws SameNameException,LowCapacityException,DuplicateAddOnsException {
 
         for(Classroom classroom: classrooms){
@@ -92,8 +93,7 @@ public interface ClassSchedule {
 
         List<AddOns> addOnsList = createAddOnsList(addOns);
 
-
-        return new Classroom(name,capacity,addOnsList);
+        classrooms.add(new Classroom(name,capacity,addOnsList));
     }
 
     /**
@@ -104,6 +104,10 @@ public interface ClassSchedule {
      * @throws DuplicateAddOnsException ako ima duplikata
      */
     private List<AddOns> createAddOnsList(AddOns[] addOns){
+
+        if (addOns == null) {
+            return Collections.emptyList();
+        }
 
         Set<AddOns> uniqueAddOnsSet = new HashSet<>();
 
@@ -154,11 +158,11 @@ public interface ClassSchedule {
      * @throws ClassroomDoesntExistException ako ucionica ne postoji
      * @throws ClassLectureDoesntExistException ako predmet sa tim imenom ne postoji
      */
-    void RemoveClass(Schedule schedule,Date fromDate,Date toDate, int startTime, String classroomName, String lectureName)
+    void removeClass(Schedule schedule,Date fromDate,Date toDate, int startTime, String classroomName, String lectureName)
         throws WrongStartTimeException,DatesException, WrongDateException,WrongLectureNameException, ClassroomDoesntExistException, ClassLectureDoesntExistException;
 
     /**
-     * premesta cas iz rasporeda
+     * Premesta cas iz rasporeda
      *
      * @param schedule // raspored nad kojim radimo
      * @param oldFromDate // datum do kog traju predavanja koje hocemo da promenimo ili null ako je predavanje samo jednog dana
@@ -178,7 +182,7 @@ public interface ClassSchedule {
      * @throws TermTakenException ako je termin vec zauzet
      * @throws WrongClassroomNameException ako je ucionica vezana za termin pogresno unesena
      */
-    void RescheduleClass(Schedule schedule, Date oldFromDate,Date oldToDate, int oldStartTime, String oldClassroomName, String lectureName,
+    void rescheduleClass(Schedule schedule, Date oldFromDate,Date oldToDate, int oldStartTime, String oldClassroomName, String lectureName,
                          Date newFromDate,Date newToDate, int newStartTime, String newClassroomName)
         throws DatesException,ClassroomDoesntExistException,WrongStartTimeException,WrongDateException,WrongLectureNameException,WrongClassroomNameException, TermTakenException;
 
@@ -188,7 +192,7 @@ public interface ClassSchedule {
      * Pretraga za ucionicu po kapacitetu i dodacima
      *
      * @param schedule // raspored nad kojim radimo
-     * @param capacity // broj mesta u ucionici ( ako nije bitan parametar proslediti -1 ili 0 )
+     * @param capacity // broj mesta u ucionici
      * @param addOns // dodaci koje ucionica ima ( projector, computers, pen )
      * @return lista ucionica koje se poklapaju sa brojem mesta i dodacima
      * @throws ClassroomDoesntExistException ako ucionica ne postoji
@@ -265,7 +269,7 @@ public interface ClassSchedule {
      * Pretraga za ucionicu po kapacitetu
      *
      * @param schedule // raspored nad kojim radimo
-     * @param capacity // broj mesta u ucionici ( ako nije bitan parametar proslediti -1 ili 0 )
+     * @param capacity // broj mesta u ucionici
      * @return lista ucionica koje se poklapaju sa brojem mesta
      * @throws ClassroomDoesntExistException ako ucionica ne postoji
      * @throws LowCapacityException ako je navedeni kapacitet manji od 1
@@ -294,6 +298,7 @@ public interface ClassSchedule {
         return  classroomsToReturn;
     }
 
+/////////////////////////////////////// TODO DOVDE DOBRO
 
     /**
      * Pretraga termina po datumu i trajanju
@@ -353,7 +358,9 @@ public interface ClassSchedule {
                 Term nextTerm = new Term(entry.getKey().getClassroom(),entry.getKey().getStartTime()+i,entry.getKey().getDate());
                 // finds the next term and checks if it's not taken
                 for(Map.Entry<Term,ClassLecture> entry1 : schedule.getScheduleMap().entrySet()) {
-                    if(entry1.getKey().isTermTheSame(nextTerm.getClassroom(), nextTerm.getStartTime(), entry.getKey().getDate())){
+                    if(entry1.getKey().getDate().equals(nextTerm.getDate())
+                            && entry1.getKey().getClassroom().equals(nextTerm.getClassroom())
+                            && entry1.getKey().getStartTime() == nextTerm.getStartTime()){
                         if (entry1.getValue() != null) {
                             isTermValid = false;
                         }
@@ -409,8 +416,11 @@ public interface ClassSchedule {
                     isTermFreeAndAddToList(schedule,duration,termsToReturn,entry);
                 }
                 else{
+                    // todo ovo sam dodao
                     if(entry.getValue() != null){
-                        termsToReturn.add(entry.getKey());
+                        if(entry.getValue().getStartTime() == entry.getKey().getStartTime()
+                        && duration == entry.getValue().getDuration())
+                            termsToReturn.add(entry.getKey());
                     }
                 }
             }
@@ -420,6 +430,8 @@ public interface ClassSchedule {
 
 
     }
+
+    //////////////// TODO DOVDE DOBRO
 
     /**
      * Pretraga termina po datumu, trajanju, kapacitetu ucionice i dodacima za ucionicu
@@ -470,7 +482,10 @@ public interface ClassSchedule {
                     isTermFreeAndAddToList(schedule, duration, termsToReturn, entry);
                 }
                 else{
+                    // TODO OVDE SAM DODAO
                     if(entry.getValue() != null){
+                        if(entry.getValue().getStartTime() == entry.getKey().getStartTime()
+                                && duration == entry.getValue().getDuration())
                         termsToReturn.add(entry.getKey());
                     }
                 }
@@ -549,7 +564,9 @@ public interface ClassSchedule {
                 }
                 else{
                     if(entry.getValue() != null){
-                        termsToReturn.add(entry.getKey());
+                        if(entry.getValue().getStartTime() == entry.getKey().getStartTime()
+                                && duration == entry.getValue().getDuration())
+                            termsToReturn.add(entry.getKey());
                     }
                 }
             }
@@ -610,6 +627,10 @@ public interface ClassSchedule {
                     }
                     else{
                         if(entry.getValue() != null){
+                            if(entry.getValue().getStartTime() == entry.getKey().getStartTime()
+                                    && duration == entry.getValue().getDuration())
+                                termsToReturn.add(entry.getKey());
+                        }
 //                            boolean isTermValid = true;
                             // todo ovo mislim da ne treba kada se trazi zauzeto jer nas ne zanima duzina koliko je zauzeto samo kada
                             // checks if the final time would go out of bounds
@@ -645,15 +666,17 @@ public interface ClassSchedule {
 //                            }
 
 //                            if(isTermValid){
-                                termsToReturn.add(entry.getKey());
+//                                termsToReturn.add(entry.getKey());
 //                            }
-                        }
+//                        }
                     }
                 }
             }
         // todo mozda exception da ne postoji ni jedan tj lista je prazna?
         return termsToReturn;
     }
+
+    //////////////////////////// TODO DOVDE URADJENO
 
     /**
      * Pretraga termina kada je dati profesor zauzet ili slobodan
@@ -682,35 +705,32 @@ public interface ClassSchedule {
             }
         }
 
-        List<Term> termList = new ArrayList<>();
+        List<Term> notFreeTermList = new ArrayList<>();
 
         for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
             if(entry.getKey().getDate().equals(fromDate)){
-                if(entry.getValue().getProfessor().equals(professor)){
-//                if(entry.getValue().getStartTime() == entry.getKey().getStartTime()){
-                    termList.add(entry.getKey());
-//                }
+                if(entry.getValue()!= null && entry.getValue().getProfessor().equals(professor)){
+                    notFreeTermList.add(entry.getKey());
                 }
             }
             else if(toDate != null){
                 // todo ovde mozda samo after(toDate)
-                if((entry.getKey().getDate().after(fromDate) && entry.getKey().getDate().before(toDate))|| entry.getKey().getDate().equals(toDate)){
-                    if(entry.getValue().getProfessor().equals(professor)){
-//                        if(entry.getValue().getStartTime() == entry.getKey().getStartTime()){
-                            termList.add(entry.getKey());
-//                        }
+                if(entry.getKey().getDate().after(fromDate) && !entry.getKey().getDate().after(toDate)){
+                    if(entry.getValue()!= null && entry.getValue().getProfessor().equals(professor)){
+                        notFreeTermList.add(entry.getKey());
                     }
                 }
             }
 
         }
-        if(termList.isEmpty()){
+        if(notFreeTermList.isEmpty()){
             throw new ProfessorDoesntExistException("Profesor sa imenom: " +professor + " ne postoji");
         }
         if(!isFree){
             // lista zauzetih termina
-            return termList;
+            return notFreeTermList;
         }
+        //////////////////// dovde idu zauzeti
 
         List<Term> termFreeList = new ArrayList<>();
 
@@ -718,23 +738,36 @@ public interface ClassSchedule {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(fromDate);
 
+        Date iterateToDate;
+        if(toDate!= null)
+            iterateToDate = toDate;
+        else {
+            iterateToDate = fromDate;
+        }
+
         // for each date
-        while (!calendar.getTime().after(toDate)) {
+        while (!calendar.getTime().after(iterateToDate)) {
             // if the date is a weekend skip
             if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY || calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY){
                 calendar.add(Calendar.DAY_OF_MONTH, 1);
                 continue;
             }
             // for each hour
-            for(int i = schedule.getStartHours(); i<= schedule.getEndHours(); i++){
+            for(int i = schedule.getStartHours(); i< schedule.getEndHours(); i++){
 
                 boolean sameTerm = false;
 
-                for(Term notFreeTerm : termList){
-                    if(notFreeTerm.isTermTheSame(null,i,calendar.getTime())){
+                for(Term notFreeTerm : notFreeTermList){
+
+                    // todo ovo sam zamenio
+                    if(notFreeTerm.getDate().equals(calendar.getTime()) && notFreeTerm.getStartTime() == i){
                         sameTerm = true;
                         break;
                     }
+//                    if(notFreeTerm.isTermTheSame(null,i,calendar.getTime())){
+//                        sameTerm = true;
+//                        break;
+//                    }
                 }
                 if(sameTerm){
                     continue;
@@ -766,7 +799,7 @@ public interface ClassSchedule {
         List<Term> termList = new ArrayList<>();
 
         for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
-            if(entry.getValue().getClassName().equals(className)){
+            if(entry.getValue() != null && entry.getValue().getClassName().equals(className)){
                 // todo ovo mozda izmeniti da samo vraca prvi ili izmeniti da se ne vraca termin i cas (entry)
 //                if(entry.getValue().getStartTime() == entry.getKey().getStartTime()){
                     termList.add(entry.getKey());
@@ -781,7 +814,40 @@ public interface ClassSchedule {
         return termList;
     }
 
+    /**
+     * Pretraga casa po datumu i vremenu
+     *
+     * @param schedule // raspored nad kojim radimo
+     * @param date // datum za pretragu
+     * @param time // vreme za pretragu
+     * @return predavanje vezano za to vreme i datum
+     * @throws TermIsFreeException ako je trazeni termin slobodan
+     * @throws DatesException ako datum van randih dana
+     * @throws WrongStartTimeException ako je vreme van radnog vremena
+     * @throws TermDoesntExistException ako termin ne postoji (ako je vikend)
+     */
+    default ClassLecture findClassForTerm(Schedule schedule, Date date, int time )
+        throws TermIsFreeException, DatesException, WrongStartTimeException, TermDoesntExistException{
 
+        if(schedule.getStartHours() > time || schedule.getEndHours() <= time){
+            throw new WrongStartTimeException("Vreme izlazi iz random vremena");
+        }
+        if(schedule.getStartDate().after(date) || schedule.getEndDate().before(date)){
+            throw new DatesException("Datum je van datuma radnih dana");
+        }
+
+        for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
+            if(entry.getKey().getDate().equals(date) && entry.getKey().getStartTime() == time){
+                if(entry.getValue() != null){
+                    return entry.getValue();
+                }
+                else {
+                    throw new TermIsFreeException("Ovaj termin je slobodan");
+                }
+            }
+        }
+        throw new TermDoesntExistException("Ovaj termin ne postoji (je vikend)");
+    }
 
 
 

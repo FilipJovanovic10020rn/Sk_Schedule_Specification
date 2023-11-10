@@ -42,4 +42,15 @@ public class ClassLecture {
     public Date getEndDate() {
         return endDate;
     }
+
+    @Override
+    public String toString() {
+        return "ClassLecture{" +
+                "className='" + className + '\'' +
+                ", professor='" + professor + '\'' +
+                ", startTime=" + startTime +
+                ", duration=" + duration +
+                ", startDate=" + startDate +
+                '}';
+    }
 }

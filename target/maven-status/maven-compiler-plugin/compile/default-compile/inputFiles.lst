@@ -10,6 +10,7 @@ D:\filip fax\FAX\Softverske Komponente\Schedule_Specification\src\main\java\rs\r
 D:\filip fax\FAX\Softverske Komponente\Schedule_Specification\src\main\java\rs\raf\classes\ClassLecture.java
 D:\filip fax\FAX\Softverske Komponente\Schedule_Specification\src\main\java\rs\raf\exceptions\ClassroomListEmptyException.java
 D:\filip fax\FAX\Softverske Komponente\Schedule_Specification\src\main\java\rs\raf\exceptions\ProfessorDoesntExistException.java
+D:\filip fax\FAX\Softverske Komponente\Schedule_Specification\src\main\java\rs\raf\exceptions\TermIsFreeException.java
 D:\filip fax\FAX\Softverske Komponente\Schedule_Specification\src\main\java\rs\raf\exceptions\DurationException.java
 D:\filip fax\FAX\Softverske Komponente\Schedule_Specification\src\main\java\rs\raf\exceptions\TermDoesntExistException.java
 D:\filip fax\FAX\Softverske Komponente\Schedule_Specification\src\main\java\rs\raf\schedule_management\ScheduleManager.java

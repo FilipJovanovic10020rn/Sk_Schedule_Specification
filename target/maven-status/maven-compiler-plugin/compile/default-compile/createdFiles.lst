@@ -7,6 +7,7 @@ rs\raf\classes\Term.class
 rs\raf\enums\AddOns.class
 rs\raf\classes\ClassLecture.class
 rs\raf\exceptions\WrongDateException.class
+rs\raf\exceptions\TermIsFreeException.class
 rs\raf\exceptions\WrongClassroomNameException.class
 rs\raf\classes\Classroom.class
 rs\raf\exceptions\WrongStartTimeException.class

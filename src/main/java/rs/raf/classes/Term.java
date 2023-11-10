@@ -55,4 +55,20 @@ public class Term {
     public Date getDate() {
         return date;
     }
+
+    @Override
+    public String toString() {
+        if(classroom != null)
+        return "Term{" +
+                "classroom=" + classroom.getName() +
+                " with a capacity of= " + classroom.getCapacity() +
+                " and addons " + classroom.getAddOns().toString() +
+                ", startTime=" + startTime +
+                ", date=" + date +
+                '}';
+        return "Term{" +
+                " startTime=" + startTime +
+                ", date=" + date +
+                '}';
+    }
 }
