@@ -1,5 +1,6 @@
 package rs.raf.schedule_management;
 
+import com.opencsv.CSVWriter;
 import rs.raf.classes.ClassLecture;
 import rs.raf.classes.Classroom;
 import rs.raf.classes.Schedule;
@@ -7,6 +8,8 @@ import rs.raf.classes.Term;
 import rs.raf.enums.AddOns;
 import rs.raf.exceptions.*;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public interface ClassSchedule {
@@ -297,8 +300,6 @@ public interface ClassSchedule {
         return  classroomsToReturn;
     }
 
-/////////////////////////////////////// TODO DOVDE DOBRO
-
     /**
      * Pretraga termina po datumu i trajanju
      *
@@ -415,7 +416,6 @@ public interface ClassSchedule {
                     isTermFreeAndAddToList(schedule,duration,termsToReturn,entry);
                 }
                 else{
-                    // todo ovo sam dodao
                     if(entry.getValue() != null){
                         if(entry.getValue().getStartTime() == entry.getKey().getStartTime()
                         && duration == entry.getValue().getDuration())
@@ -429,8 +429,6 @@ public interface ClassSchedule {
 
 
     }
-
-    //////////////// TODO DOVDE DOBRO
 
     /**
      * Pretraga termina po datumu, trajanju, kapacitetu ucionice i dodacima za ucionicu
@@ -481,7 +479,6 @@ public interface ClassSchedule {
                     isTermFreeAndAddToList(schedule, duration, termsToReturn, entry);
                 }
                 else{
-                    // TODO OVDE SAM DODAO
                     if(entry.getValue() != null){
                         if(entry.getValue().getStartTime() == entry.getKey().getStartTime()
                                 && duration == entry.getValue().getDuration())
@@ -675,8 +672,6 @@ public interface ClassSchedule {
         return termsToReturn;
     }
 
-    //////////////////////////// TODO DOVDE URADJENO
-
     /**
      * Pretraga termina kada je dati profesor zauzet ili slobodan
      *
@@ -713,7 +708,6 @@ public interface ClassSchedule {
                 }
             }
             else if(toDate != null){
-                // todo ovde mozda samo after(toDate)
                 if(entry.getKey().getDate().after(fromDate) && !entry.getKey().getDate().after(toDate)){
                     if(entry.getValue()!= null && entry.getValue().getProfessor().equals(professor)){
                         notFreeTermList.add(entry.getKey());
@@ -758,7 +752,6 @@ public interface ClassSchedule {
 
                 for(Term notFreeTerm : notFreeTermList){
 
-                    // todo ovo sam zamenio
                     if(notFreeTerm.getDate().equals(calendar.getTime()) && notFreeTerm.getStartTime() == i){
                         sameTerm = true;
                         break;
@@ -799,7 +792,7 @@ public interface ClassSchedule {
 
         for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
             if(entry.getValue() != null && entry.getValue().getClassName().equals(className)){
-                // todo ovo mozda izmeniti da samo vraca prvi ili izmeniti da se ne vraca termin i cas (entry)
+                // todo ovo otkomentarisati ako cemo da vracamo samo prvi sat
 //                if(entry.getValue().getStartTime() == entry.getKey().getStartTime()){
                     termList.add(entry.getKey());
 //                }
@@ -848,27 +841,45 @@ public interface ClassSchedule {
         throw new TermDoesntExistException("Ovaj termin ne postoji (je vikend)");
     }
 
+    /**
+     * Eksportuje raspored na lokaciji kao CSV
+     *
+     * @implNote Koristi openCSV
+     * @param schedule // raspored
+     * @param filePath // lokacija gde ce se nalaziti exportovani fajl
+     * @throws FilePathException ako lokacija za fajl nije dobra
+     * @throws ScheduleException ako je raspored prazan
+     * @throws RuntimeException ako dodje do greske sa openCSV dependencijem
+     */
+    void exportCSV(Schedule schedule, String filePath);
 
+    // todo na importe dodati mozda listu clasromova
+    void importCSV(Schedule schedule, String filePath);
 
-    // TODO ovo prekopirati sa predavanja
-    default void exportCSV(){
-
-    };
-    default void importCSV(){
-
-    };
-    default void exportFile(){
-
-    };
-    default void importFile(){
-
-    };
-    default void exportJSON(){
-
-    };
-    default void importJSON(){
-
-    };
+    /**
+     * Eksportuje raspored na lokaciji kao PDF
+     *
+     * @implNote Koristi pdfbox
+     * @param schedule // raspored
+     * @param filePath // lokacija gde ce se nalaziti exportovani fajl
+     * @throws FilePathException ako lokacija za fajl nije dobra
+     * @throws ScheduleException ako je raspored prazan
+     * @throws RuntimeException ako dodje do greske sa openCSV dependencijem
+     */
+    void exportPDF(Schedule schedule, String filePath);
+    void importPDF(Schedule schedule, String filePath);
+    /**
+     * Eksportuje raspored na lokaciji kao JSON
+     *
+     * @implNote Koristi GSON
+     * @param schedule // raspored
+     * @param filePath // lokacija gde ce se nalaziti exportovani fajl
+     * @throws FilePathException ako lokacija za fajl nije dobra
+     * @throws ScheduleException ako je raspored prazan
+     * @throws RuntimeException ako dodje do greske sa openCSV dependencijem
+     */
+    void exportJSON(Schedule schedule, String filePath);
+    void importJSON(Schedule schedule, String filePath);
 
 
 }
