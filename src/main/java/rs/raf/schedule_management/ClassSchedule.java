@@ -793,9 +793,9 @@ public interface ClassSchedule {
         for(Map.Entry<Term,ClassLecture> entry : schedule.getScheduleMap().entrySet()){
             if(entry.getValue() != null && entry.getValue().getClassName().equals(className)){
                 // todo ovo otkomentarisati ako cemo da vracamo samo prvi sat
-//                if(entry.getValue().getStartTime() == entry.getKey().getStartTime()){
+                if(entry.getValue().getStartTime() == entry.getKey().getStartTime()){
                     termList.add(entry.getKey());
-//                }
+                }
             }
         }
 
