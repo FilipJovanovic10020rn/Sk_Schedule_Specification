@@ -45,12 +45,21 @@ public class ClassLecture {
 
     @Override
     public String toString() {
+        if(endDate==null)
         return "ClassLecture{" +
                 "className='" + className + '\'' +
                 ", professor='" + professor + '\'' +
                 ", startTime=" + startTime +
                 ", duration=" + duration +
                 ", startDate=" + startDate +
+                '}';
+        return "ClassLecture{" +
+                "className='" + className + '\'' +
+                ", professor='" + professor + '\'' +
+                ", startTime=" + startTime +
+                ", duration=" + duration +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
                 '}';
     }
 }
