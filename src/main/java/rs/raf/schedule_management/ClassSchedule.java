@@ -853,7 +853,16 @@ public interface ClassSchedule {
      */
     void exportCSV(Schedule schedule, String filePath);
 
-    // todo na importe dodati mozda listu clasromova
+    /**
+     * Importuje raspored sa lokacije u CSV formatu
+     *
+     * @implNote Koristi openCSV
+     * @param schedule // raspored
+     * @param filePath // lokacija gde ce se nalaziti exportovani fajl
+     * @throws FilePathException ako lokacija za fajl nije dobra
+     * @throws ScheduleException ako je raspored prazan
+     * @throws RuntimeException ako dodje do greske sa openCSV dependencijem
+     */
     void importCSV(Schedule schedule, String filePath);
 
     /**
@@ -867,6 +876,16 @@ public interface ClassSchedule {
      * @throws RuntimeException ako dodje do greske sa openCSV dependencijem
      */
     void exportPDF(Schedule schedule, String filePath);
+    /**
+     * Importuje raspored sa lokacije u PDF formatu
+     *
+     * @implNote Koristi pdfbox
+     * @param schedule // raspored
+     * @param filePath // lokacija gde ce se nalaziti exportovani fajl
+     * @throws FilePathException ako lokacija za fajl nije dobra
+     * @throws ScheduleException ako je raspored prazan
+     * @throws RuntimeException ako dodje do greske sa openCSV dependencijem
+     */
     void importPDF(Schedule schedule, String filePath);
     /**
      * Eksportuje raspored na lokaciji kao JSON
@@ -879,6 +898,16 @@ public interface ClassSchedule {
      * @throws RuntimeException ako dodje do greske sa openCSV dependencijem
      */
     void exportJSON(Schedule schedule, String filePath);
+    /**
+     * Importuje raspored sa lokacije u JSON formatu
+     *
+     * @implNote Koristi GSON
+     * @param schedule // raspored
+     * @param filePath // lokacija gde ce se nalaziti exportovani fajl
+     * @throws FilePathException ako lokacija za fajl nije dobra
+     * @throws ScheduleException ako je raspored prazan
+     * @throws RuntimeException ako dodje do greske sa openCSV dependencijem
+     */
     void importJSON(Schedule schedule, String filePath);
 
 
